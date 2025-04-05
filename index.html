@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор Sitemap</title>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <script>
+        vkBridge.send('VKWebAppInit');
+    </script>
+
+    <style>
+        /* Основные стили в стиле VK */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e7e8ec;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1, h2 {
+            color: #4a76a8;
+            text-align: center;
+        }
+
+        input, select, textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px auto;
+            display: block;
+            border: 1px solid #dfe1e5;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: #fff;
+            color: #2c2d30;
+        }
+
+        button {
+            background-color: #4a76a8;
+            color: #fff;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #3a5a78;
+        }
+
+        #sitemap-output {
+            resize: none;
+            background-color: #f9fafb;
+        }
+
+        .button-group {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        #url-list {
+            background-color: #f9fafb;
+            padding: 10px;
+            border-radius: 4px;
+            list-style-type: none;
+            border: 1px solid #dfe1e5;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        #url-list li {
+            padding: 5px 0;
+            color: #2c2d30;
+            border-bottom: 1px solid #e7e8ec;
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 480px) {
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+
+            input, select, textarea {
+                width: calc(100% - 10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Генератор Sitemap</h1>
+
+        <label for="url">URL:</label>
+        <input type="text" id="url" placeholder="Введите URL" />
+
+        <label for="priority">Приоритет:</label>
+        <input type="number" id="priority" value="0.5" step="0.1" min="0" max="1" />
+
+        <label for="changefreq">Частота изменения:</label>
+        <select id="changefreq">
+            <option value="always">Всегда</option>
+            <option value="hourly">Каждый час</option>
+            <option value="daily">Каждый день</option>
+            <option value="weekly">Каждую неделю</option>
+            <option value="monthly">Каждый месяц</option>
+            <option value="yearly">Каждый год</option>
+            <option value="never">Никогда</option>
+        </select>
+
+        <label for="lastmod">Последнее изменение (YYYY-MM-DD):</label>
+        <input type="date" id="lastmod" />
+
+        <div class="button-group">
+            <button id="add-url">Добавить URL</button>
+            <button id="generate-sitemap">Сгенерировать Sitemap</button>
+            <button id="reset-all">Сброс</button>
+            <button id="download-sitemap">Скачать sitemap.xml</button>
+        </div>
+
+        <h2>Список URL</h2>
+        <ul id="url-list"></ul>
+
+        <h2>Сгенерированный Sitemap XML</h2>
+        <textarea id="sitemap-output" rows="10" readonly></textarea>
+    </div>
+
+    <script>
+        const urlList = [];
+        
+        document.getElementById('add-url').onclick = function() {
+            const url = document.getElementById('url').value;
+            const priority = document.getElementById('priority').value;
+            const changefreq = document.getElementById('changefreq').value;
+            const lastmod = document.getElementById('lastmod').value;
+
+            if (url) {
+                urlList.push({ url, priority, changefreq, lastmod });
+                updateUrlList();
+                clearInputs();
+            } else {
+                alert('Пожалуйста, введите URL.');
+            }
+        };
+
+        document.getElementById('generate-sitemap').onclick = function() {
+            const sitemapXml = generateSitemapXml();
+            document.getElementById('sitemap-output').value = sitemapXml;
+        };
+
+        document.getElementById('reset-all').onclick = function() {
+            urlList.length = 0;
+            updateUrlList();
+            clearInputs();
+            document.getElementById('sitemap-output').value = '';
+        };
+
+        document.getElementById('download-sitemap').onclick = function() {
+            const sitemapXml = document.getElementById('sitemap-output').value;
+            if (sitemapXml) {
+                downloadFile(sitemapXml, 'sitemap.xml', 'application/xml');
+            } else {
+                alert('Сначала сгенерируйте Sitemap.');
+            }
+        };
+
+        function updateUrlList() {
+            const urlListElement = document.getElementById('url-list');
+            urlListElement.innerHTML = '';
+            urlList.forEach((item) => {
+                const li = document.createElement('li');
+                li.textContent = item.url;
+                urlListElement.appendChild(li);
+            });
+        }
+
+        function clearInputs() {
+            document.getElementById('url').value = '';
+            document.getElementById('priority').value = '0.5';
+            document.getElementById('changefreq').value = 'never';
+            document.getElementById('lastmod').value = new Date().toISOString().split('T')[0];
+        }
+
+        function generateSitemapXml() {
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+            xml += '<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+            urlList.forEach(item => {
+                xml += `  <url>\n`;
+                xml += `    <loc>${item.url}</loc>\n`;
+                xml += `    <priority>${item.priority}</priority>\n`;
+                xml += `    <changefreq>${item.changefreq}</changefreq>\n`;
+                xml += `    <lastmod>${item.lastmod}</lastmod>\n`;
+                xml += `  </url>\n`;
+            });
+
+            xml += '</urlset>';
+            return xml;
+        }
+
+        function downloadFile(content, fileName, mimeType) {
+            const a = document.createElement('a');
+            const file = new Blob([content], { type: mimeType });
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+    </script>
+</body>
+</html>
