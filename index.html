@@ -6,10 +6,15 @@
     <title>Генератор Sitemap</title>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <script>
-        vkBridge.send('VKWebAppInit');
+        (async () => {
+            try {
+                await vkBridge.send('VKWebAppInit');
+            } catch (e) {
+                console.error('VKBridge init error:', e);
+            }
+        })();
     </script>
     <style>
-        /* Основные стили в стиле VK */
         body {
             font-family: Arial, sans-serif;
             background-color: #e7e8ec;
@@ -91,7 +96,6 @@
             border-bottom: 1px solid #e7e8ec;
         }
 
-        /* Стили для модального окна онбординга */
         .modal {
             display: none;
             position: fixed;
@@ -115,21 +119,6 @@
             text-align: center;
         }
 
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        /* Стили для секции FAQ */
         .faq-section {
             margin-top: 20px;
             padding: 15px;
@@ -152,13 +141,11 @@
             cursor: pointer;
         }
 
-        /* Мобильная адаптация */
         @media (max-width: 480px) {
             .container {
                 width: 95%;
                 padding: 15px;
             }
-
             input, select, textarea {
                 width: calc(100% - 10px);
             }
@@ -166,10 +153,8 @@
     </style>
 </head>
 <body>
-    <!-- Модальное окно онбординга -->
     <div id="onboardingModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeOnboarding()">&times;</span>
             <h2>Добро пожаловать в Генератор Sitemap!</h2>
             <p>Это приложение поможет вам создать файл sitemap.xml для вашего сайта, что улучшит его индексирование поисковыми системами.</p>
             <button onclick="nextOnboarding()">Далее</button>
@@ -196,9 +181,8 @@
             <option value="never">Никогда</option>
         </select>
 
-        <label for="lastmod">Последнее изменение (YYYY-MM-DD):
-
-         <input type="date" id="lastmod" />
+        <label for="lastmod">Последнее изменение (YYYY-MM-DD):</label>
+        <input type="date" id="lastmod" />
 
         <div class="button-group">
             <button id="add-url">Добавить URL</button>
@@ -237,6 +221,8 @@
 
     <script>
         const urlList = [];
+        let onboardingStep = 0;
+        let originalText = '';
 
         document.getElementById('add-url').onclick = function() {
             const url = document.getElementById('url').value;
@@ -294,7 +280,6 @@
         function generateSitemapXml() {
             let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
             xml += '<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">\n';
-
             urlList.forEach(item => {
                 xml += `  <url>\n`;
                 xml += `    <loc>${item.url}</loc>\n`;
@@ -303,7 +288,6 @@
                 xml += `    <lastmod>${item.lastmod}</lastmod>\n`;
                 xml += `  </url>\n`;
             });
-
             xml += '</urlset>';
             return xml;
         }
@@ -324,23 +308,32 @@
             document.getElementById('lastmod').value = new Date().toISOString().split('T')[0];
         }
 
-        // Модальное окно онбординга
         window.onload = function() {
             const modal = document.getElementById('onboardingModal');
             modal.style.display = 'block';
+            originalText = modal.querySelector('p').innerText;
+            document.getElementById('lastmod').value = new Date().toISOString().split('T')[0];
         };
 
         function nextOnboarding() {
+            onboardingStep++;
             const modal = document.getElementById('onboardingModal');
-            modal.querySelector('p').innerText = 'Введите URL и другие параметры, нажмите “Добавить URL”. Когда список готов — нажмите “Сгенерировать Sitemap”.';
-            modal.querySelector('button').innerText = 'Начать работу';
-            modal.querySelector('button').onclick = closeOnboarding;
+            if (onboardingStep === 1) {
+                modal.querySelector('p').innerText = 'Введите URL и другие параметры, нажмите “Добавить URL”. Когда список готов — нажмите “Сгенерировать Sitemap”.';
+                modal.querySelector('button').innerText = 'Начать работу';
+            } else {
+                closeOnboarding();
+            }
         }
 
         function closeOnboarding() {
-            document.getElementById('onboardingModal').style.display = 'none';
+            const modal = document.getElementById('onboardingModal');
+            modal.style.display = 'none';
+            onboardingStep = 0;
+            modal.querySelector('p').innerText = originalText;
+            modal.querySelector('button').innerText = 'Далее';
+            modal.querySelector('button').onclick = nextOnboarding;
         }
     </script>
 </body>
 </html>
-
