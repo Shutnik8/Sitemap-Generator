@@ -28,7 +28,6 @@
             padding: 20px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
-            position: relative;
         }
 
         h1, h2 {
@@ -92,7 +91,7 @@
             border-bottom: 1px solid #e7e8ec;
         }
 
-        /* Стили для модального окна */
+        /* Стили для модального окна онбординга */
         .modal {
             display: none;
             position: fixed;
@@ -101,16 +100,18 @@
             top: 0;
             width: 100%;
             height: 100%;
+            overflow: auto;
             background-color: rgba(0,0,0,0.5);
         }
 
         .modal-content {
             background-color: #fefefe;
-            margin: 15% auto;
+            margin: 10% auto;
             padding: 20px;
-            border-radius: 8px;
+            border: 1px solid #888;
             width: 80%;
             max-width: 500px;
+            border-radius: 8px;
             text-align: center;
         }
 
@@ -119,28 +120,36 @@
             float: right;
             font-size: 28px;
             font-weight: bold;
-            cursor: pointer;
         }
 
         .close:hover,
         .close:focus {
             color: black;
             text-decoration: none;
+            cursor: pointer;
         }
 
-        /* Стили для переключателя языка */
-        .language-switcher {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-        }
-
-        .language-switcher select {
-            padding: 5px;
-            border-radius: 4px;
+        /* Стили для секции FAQ */
+        .faq-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9fafb;
+            border-radius: 8px;
             border: 1px solid #dfe1e5;
-            background-color: #fff;
-            font-size: 14px;
+        }
+
+        .faq-section h2 {
+            text-align: center;
+            color: #4a76a8;
+        }
+
+        .faq-section details {
+            margin-bottom: 10px;
+        }
+
+        .faq-section summary {
+            font-weight: bold;
+            cursor: pointer;
         }
 
         /* Мобильная адаптация */
@@ -157,24 +166,26 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Переключатель языка -->
-        <div class="language-switcher">
-            <select id="language-select">
-                <option value="ru">Русский</option>
-                <option value="en">English</option>
-            </select>
+    <!-- Модальное окно онбординга -->
+    <div id="onboardingModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeOnboarding()">&times;</span>
+            <h2>Добро пожаловать в Генератор Sitemap!</h2>
+            <p>Это приложение поможет вам создать файл sitemap.xml для вашего сайта, что улучшит его индексирование поисковыми системами.</p>
+            <button onclick="nextOnboarding()">Далее</button>
         </div>
+    </div>
 
-        <h1 id="title">Генератор Sitemap</h1>
+    <div class="container">
+        <h1>Генератор Sitemap</h1>
 
-        <label for="url" id="url-label">URL:</label>
+        <label for="url">URL:</label>
         <input type="text" id="url" placeholder="Введите URL" />
 
-        <label for="priority" id="priority-label">Приоритет:</label>
+        <label for="priority">Приоритет:</label>
         <input type="number" id="priority" value="0.5" step="0.1" min="0" max="1" />
 
-        <label for="changefreq" id="changefreq-label">Частота изменения:</label>
+        <label for="changefreq">Частота изменения:</label>
         <select id="changefreq">
             <option value="always">Всегда</option>
             <option value="hourly">Каждый час</option>
@@ -185,27 +196,151 @@
             <option value="never">Никогда</option>
         </select>
 
-        <label for="lastmod" id="lastmod-label">Последнее изменение (YYYY-MM-DD):</label>
-        <input type="date" id="lastmod" />
+        <label for="lastmod">Последнее изменение (YYYY-MM-DD):
+::contentReference[oaicite:0]{index=0}
+         <input type="date" id="lastmod" />
 
         <div class="button-group">
             <button id="add-url">Добавить URL</button>
             <button id="generate-sitemap">Сгенерировать Sitemap</button>
             <button id="reset-all">Сброс</button>
             <button id="download-sitemap">Скачать sitemap.xml</button>
+            <button onclick="fillExample()" style="margin-top:10px; background-color: #5cb85c;">Заполнить примером</button>
         </div>
 
-        <h2 id="url-list-title">Список URL</h2>
+        <h2>Список URL</h2>
         <ul id="url-list"></ul>
 
-        <h2 id="sitemap-output-title">Сгенерированный Sitemap XML</h2>
+        <h2>Сгенерированный Sitemap XML</h2>
         <textarea id="sitemap-output" rows="10" readonly></textarea>
+
+        <div class="faq-section">
+            <h2>📘 Часто задаваемые вопросы</h2>
+            <details>
+                <summary>Что такое URL?</summary>
+                <p>Это адрес страницы на вашем сайте. Пример: https://example.com/page1</p>
+            </details>
+            <details>
+                <summary>Что указывать в приоритете?</summary>
+                <p>От 0.0 до 1.0 — чем выше число, тем важнее страница. Например, для главной 1.0, для обычной статьи — 0.5.</p>
+            </details>
+            <details>
+                <summary>Как выбрать частоту изменения?</summary>
+                <p>Выберите, как часто обновляется контент: ежедневно, ежемесячно и т.п.</p>
+            </details>
+            <details>
+                <summary>Формат даты?</summary>
+                <p>Дата указывается в формате YYYY-MM-DD. Пример: 2024-12-01.</p>
+            </details>
+        </div>
     </div>
 
-    <!-- Модальное окно для онбординга -->
-    <div id="onboarding-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2 id="onboarding-title">
-::contentReference[oaicite:0]{index=0}
- 
+    <script>
+        const urlList = [];
+
+        document.getElementById('add-url').onclick = function() {
+            const url = document.getElementById('url').value;
+            const priority = document.getElementById('priority').value;
+            const changefreq = document.getElementById('changefreq').value;
+            const lastmod = document.getElementById('lastmod').value;
+
+            if (url) {
+                urlList.push({ url, priority, changefreq, lastmod });
+                updateUrlList();
+                clearInputs();
+            } else {
+                alert('Пожалуйста, введите URL.');
+            }
+        };
+
+        document.getElementById('generate-sitemap').onclick = function() {
+            const sitemapXml = generateSitemapXml();
+            document.getElementById('sitemap-output').value = sitemapXml;
+        };
+
+        document.getElementById('reset-all').onclick = function() {
+            urlList.length = 0;
+            updateUrlList();
+            clearInputs();
+            document.getElementById('sitemap-output').value = '';
+        };
+
+        document.getElementById('download-sitemap').onclick = function() {
+            const sitemapXml = document.getElementById('sitemap-output').value;
+            if (sitemapXml) {
+                downloadFile(sitemapXml, 'sitemap.xml', 'application/xml');
+            } else {
+                alert('Сначала сгенерируйте Sitemap.');
+            }
+        };
+
+        function updateUrlList() {
+            const urlListElement = document.getElementById('url-list');
+            urlListElement.innerHTML = '';
+            urlList.forEach((item) => {
+                const li = document.createElement('li');
+                li.textContent = item.url;
+                urlListElement.appendChild(li);
+            });
+        }
+
+        function clearInputs() {
+            document.getElementById('url').value = '';
+            document.getElementById('priority').value = '0.5';
+            document.getElementById('changefreq').value = 'never';
+            document.getElementById('lastmod').value = new Date().toISOString().split('T')[0];
+        }
+
+        function generateSitemapXml() {
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+            xml += '<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+            urlList.forEach(item => {
+                xml += `  <url>\n`;
+                xml += `    <loc>${item.url}</loc>\n`;
+                xml += `    <priority>${item.priority}</priority>\n`;
+                xml += `    <changefreq>${item.changefreq}</changefreq>\n`;
+                xml += `    <lastmod>${item.lastmod}</lastmod>\n`;
+                xml += `  </url>\n`;
+            });
+
+            xml += '</urlset>';
+            return xml;
+        }
+
+        function downloadFile(content, fileName, mimeType) {
+            const a = document.createElement('a');
+            const file = new Blob([content], { type: mimeType });
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function fillExample() {
+            document.getElementById('url').value = 'https://example.com/';
+            document.getElementById('priority').value = '1.0';
+            document.getElementById('changefreq').value = 'daily';
+            document.getElementById('lastmod').value = new Date().toISOString().split('T')[0];
+        }
+
+        // Модальное окно онбординга
+        window.onload = function() {
+            const modal = document.getElementById('onboardingModal');
+            modal.style.display = 'block';
+        };
+
+        function nextOnboarding() {
+            const modal = document.getElementById('onboardingModal');
+            modal.querySelector('p').innerText = 'Введите URL и другие параметры, нажмите “Добавить URL”. Когда список готов — нажмите “Сгенерировать Sitemap”.';
+            modal.querySelector('button').innerText = 'Начать работу';
+            modal.querySelector('button').onclick = closeOnboarding;
+        }
+
+        function closeOnboarding() {
+            document.getElementById('onboardingModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
+
